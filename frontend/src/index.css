@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #0a0a1a;
+    --color-card: #111128;
+    --color-border: #1e2040;
+    --color-primary: #6366f1;
+    --color-accent: #10b981;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0a0a1a;
+    background-image: 
+      radial-gradient(at 20% 10%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0f0f1e;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3730a3;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6366f1;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: rgba(99, 102, 241, 0.3);
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* Glass Card */
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-sm border border-white/[0.08] rounded-2xl;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+  .glass-card-hover:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 py-2.5 rounded-xl 
+           transition-all duration-200 hover:from-indigo-500 hover:to-purple-500 hover:shadow-neon 
+           hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-white/[0.06] text-white border border-white/10 font-medium px-6 py-2.5 rounded-xl
+           transition-all duration-200 hover:bg-white/[0.1] hover:border-white/20
+           active:scale-[0.98] disabled:opacity-50;
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-rose-600 text-white font-semibold px-6 py-2.5 rounded-xl
+           transition-all duration-200 hover:from-red-500 hover:to-rose-500 hover:shadow-lg;
+  }
+
+  .btn-success {
+    @apply bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold px-6 py-2.5 rounded-xl
+           transition-all duration-200 hover:from-emerald-500 hover:to-teal-500 hover:shadow-neon-green;
+  }
+
+  /* Input */
+  .input-field {
+    @apply w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white
+           placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+           transition-all duration-200;
+  }
+
+  .input-label {
+    @apply block text-sm font-medium text-gray-400 mb-1.5;
+  }
+
+  /* Status Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-verified {
+    @apply badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  }
+
+  .badge-pending {
+    @apply badge bg-amber-500/20 text-amber-400 border border-amber-500/30;
+  }
+
+  .badge-rejected {
+    @apply badge bg-red-500/20 text-red-400 border border-red-500/30;
+  }
+
+  .badge-active {
+    @apply badge bg-indigo-500/20 text-indigo-400 border border-indigo-500/30;
+  }
+
+  /* Blockchain Hash Display */
+  .hash-text {
+    @apply font-mono text-xs text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20;
+  }
+
+  /* Loading Skeleton */
+  .skeleton {
+    @apply bg-white/[0.05] rounded-lg animate-pulse;
+  }
+
+  /* Sidebar */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 
+           hover:text-white hover:bg-white/[0.06] transition-all duration-200 cursor-pointer;
+  }
+
+  .sidebar-link.active {
+    @apply text-white bg-indigo-600/20 border border-indigo-500/30;
+  }
+
+  /* Timeline */
+  .timeline-dot {
+    @apply w-3 h-3 rounded-full border-2 flex-shrink-0;
+  }
+
+  .timeline-line {
+    @apply w-0.5 bg-white/10 flex-grow my-1;
+  }
+
+  /* Stats Card */
+  .stat-card {
+    @apply glass-card p-6 flex flex-col gap-2;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-green {
+    @apply bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent;
+  }
+
+  /* Neon border */
+  .neon-border {
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1), inset 0 0 15px rgba(99, 102, 241, 0.05);
+  }
+
+  /* Page container */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  /* Section heading */
+  .section-heading {
+    @apply text-2xl font-bold text-white mb-6;
+  }
+
+  /* Table styles */
+  .table-container {
+    @apply glass-card overflow-hidden;
+  }
+
+  .table-header {
+    @apply text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-3 text-left;
+  }
+
+  .table-cell {
+    @apply px-4 py-4 text-sm text-gray-300 border-t border-white/[0.05];
+  }
+
+  .table-row:hover .table-cell {
+    @apply bg-white/[0.02];
+  }
+}
+
+@layer utilities {
+  /* Animated gradient bg */
+  .animated-gradient {
+    background: linear-gradient(-45deg, #1e1b4b, #0a0a1a, #1a1a3e, #0f172a);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Blockchain node pulse */
+  .node-pulse {
+    animation: nodePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes nodePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+  }
+
+  /* Text truncation */
+  .truncate-address {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+}
