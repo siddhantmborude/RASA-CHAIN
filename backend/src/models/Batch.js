@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const supplyChainEventSchema = new mongoose.Schema({
   eventType: {
     type: String,
-    enum: ['harvest', 'lab_testing', 'manufacturing', 'packaging', 'distribution', 'verification', 'custom'],
+    enum: ['harvest', 'lab_testing', 'manufacturing', 'packaging', 'distribution', 'verification', 'verified', 'custom'],
     required: true,
   },
   timestamp: { type: Date, default: Date.now },

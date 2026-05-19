@@ -79,7 +79,7 @@ const qualityReportSchema = new mongoose.Schema(
     blockchainTxHash: String,
     // Sensor data link for future AI integration
     sensorDataRef: { type: mongoose.Schema.Types.ObjectId, ref: 'SensorData' },
-    isPublic: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: true },
   },
   {
     timestamps: true,

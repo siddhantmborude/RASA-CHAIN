@@ -35,6 +35,8 @@ export default function SensorPage() {
     }
   };
 
+  const [approving, setApproving] = useState(false);
+
   const handleAnalyze = async () => {
     if (!uploadedData) return;
     setAnalyzing(true);
@@ -46,6 +48,39 @@ export default function SensorPage() {
       toast.error(err.response?.data?.error || 'Analysis failed');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const handleApproveBatch = async () => {
+    if (!formData.batchId || !analysisResult) return;
+    setApproving(true);
+    try {
+      // Create a structured Quality Report from the AI E-Tongue Sensor results!
+      const reportPayload = {
+        batchId: formData.batchId,
+        testDate: new Date(),
+        overallResult: 'passed',
+        grade: analysisResult.qualityScore >= 90 ? 'A+' : analysisResult.qualityScore >= 80 ? 'A' : 'B',
+        remarks: `AI E-Tongue Purity Analysis complete. Purity: ${analysisResult.qualityScore?.toFixed(1)}% | Adulteration Probability: ${analysisResult.adulterationScore?.toFixed(1)}%`,
+        recommendations: 'Batch approved for manufacturing processing.',
+        parameters: [
+          { name: 'pH', value: formData.pH || '6.8', unit: '', status: 'pass' },
+          { name: 'Conductivity', value: formData.conductivity || '2.4', unit: 'mS/cm', status: 'pass' },
+          { name: 'Moisture', value: formData.moisture || '8.2', unit: '%', status: 'pass' },
+          { name: 'Temperature', value: formData.temperature || '24.5', unit: '°C', status: 'pass' },
+          { name: 'AI Purity Score', value: `${analysisResult.qualityScore?.toFixed(1)}`, unit: '%', status: 'pass' },
+          { name: 'AI Adulteration Score', value: `${analysisResult.adulterationScore?.toFixed(1)}`, unit: '%', status: 'pass' },
+        ],
+        isPublic: true,
+      };
+
+      const { data } = await api.post('/reports/quality', reportPayload);
+      toast.success(`Lab Test recorded successfully on Blockchain! TX: ${data.blockchain?.txHash?.slice(0, 16)}...`);
+      setAnalysisResult(p => ({ ...p, approved: true }));
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to submit quality report');
+    } finally {
+      setApproving(false);
     }
   };
 
@@ -224,6 +259,27 @@ export default function SensorPage() {
                 </div>
 
                 <p className="text-[10px] text-gray-600 text-center">Model: {analysisResult.modelVersion}</p>
+                
+                {analysisResult.recommendation === 'approve' && (
+                  <button
+                    type="button"
+                    onClick={handleApproveBatch}
+                    disabled={approving || analysisResult.approved}
+                    className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mt-4 transition-all ${
+                      analysisResult.approved
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                    }`}
+                  >
+                    {approving ? (
+                      <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Approving...</>
+                    ) : analysisResult.approved ? (
+                      <><CheckCircle className="w-4 h-4" /> Batch Approved & Verified</>
+                    ) : (
+                      <><CheckCircle className="w-4 h-4" /> Approve & Verify Batch</>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           )}

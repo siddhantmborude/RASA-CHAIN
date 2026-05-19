@@ -129,7 +129,7 @@ router.post('/upload', protect, authorize('lab', 'manufacturer', 'admin'), senso
  *       Phase 1: Returns simulated analysis results.
  *       Phase 2: Will call actual ML model inference endpoint.
  */
-router.post('/analyze', protect, authorize('lab', 'admin'), async (req, res) => {
+router.post('/analyze', protect, authorize('lab', 'manufacturer', 'admin'), async (req, res) => {
   try {
     const { sessionId, batchId } = req.body;
 

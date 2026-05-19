@@ -15,7 +15,7 @@ const blockchainLogSchema = new mongoose.Schema(
     },
     eventType: {
       type: String,
-      enum: ['batch_created', 'harvest_entry', 'lab_testing', 'manufacturing', 'packaging', 'distribution', 'verification', 'sensor_upload', 'tamper_detected', 'regulatory_approval', 'recall'],
+      enum: ['batch_created', 'harvest_entry', 'lab_testing', 'manufacturing', 'packaging', 'distribution', 'verification', 'verified', 'sensor_upload', 'tamper_detected', 'regulatory_approval', 'recall'],
       required: true,
     },
     batchId: {

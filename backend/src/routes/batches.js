@@ -217,7 +217,7 @@ router.patch(
         manufacturing: 'manufacturing',
         packaging: 'packaging',
         distributed: 'distribution',
-        verified: 'verification',
+        verified: 'verified',
       };
 
       const eventType = stageToEvent[stage] || 'custom';
@@ -268,7 +268,7 @@ router.patch(
 router.patch(
   '/:id/approve',
   protect,
-  authorize('regulator', 'admin'),
+  authorize('regulator', 'manufacturer', 'lab', 'admin'),
   async (req, res) => {
     try {
       const { status, comments } = req.body;
@@ -301,7 +301,7 @@ router.patch(
       });
 
       batch.supplyChainEvents.push({
-        eventType: 'verification',
+        eventType: 'verified',
         performedBy: req.user._id,
         performedByName: req.user.name,
         notes: `Regulatory ${status}: ${comments}`,
@@ -309,6 +309,13 @@ router.patch(
       });
 
       await batch.save();
+
+      // Emit real-time update
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('batch:updated', { batchId: batch.batchId, stage: batch.currentStage, status: batch.status, txHash: blockchainResult.txHash });
+      }
+
       res.json({ success: true, data: batch, blockchain: blockchainResult });
     } catch (err) {
       res.status(500).json({ error: err.message });

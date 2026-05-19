@@ -11,6 +11,7 @@ const BLOCKCHAIN_EVENTS = {
   PACKAGING: 'packaging',
   DISTRIBUTION: 'distribution',
   VERIFICATION: 'verification',
+  VERIFIED: 'verified',
   SENSOR_UPLOAD: 'sensor_upload',
   TAMPER_DETECTED: 'tamper_detected',
   REGULATORY_APPROVAL: 'regulatory_approval',

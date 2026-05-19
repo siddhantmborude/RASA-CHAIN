@@ -150,14 +150,6 @@ router.post('/quality', protect, async (req, res) => {
       labName: req.user.name || req.user.organization,
     });
 
-    // Update batch quality grade
-    batch.qualityGrade = reportData.grade;
-    batch.labReportRef = reportId;
-    if (reportData.overallResult === 'passed') {
-      batch.currentStage = 'lab_testing';
-    }
-    await batch.save();
-
     const blockchainResult = await blockchainService.recordEvent({
       eventType: 'lab_testing',
       batchId: batch.batchId,
@@ -167,6 +159,31 @@ router.post('/quality', protect, async (req, res) => {
       userName: req.user.name,
       payload: { reportId, grade: reportData.grade, result: reportData.overallResult },
     });
+
+    // Update batch quality grade
+    batch.qualityGrade = reportData.grade;
+    batch.labReportRef = reportId;
+    if (reportData.overallResult === 'passed') {
+      batch.currentStage = 'lab_testing';
+    }
+
+    // Push timeline event with blockchain transaction details
+    batch.supplyChainEvents.push({
+      eventType: 'lab_testing',
+      performedBy: req.user._id,
+      performedByName: req.user.name,
+      notes: `Lab Quality Report submitted. Grade: ${reportData.grade}. Result: ${reportData.overallResult.toUpperCase()}`,
+      txHash: blockchainResult.txHash,
+      blockNumber: blockchainResult.blockNumber,
+    });
+
+    await batch.save();
+
+    // Emit real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('batch:updated', { batchId: batch.batchId, stage: batch.currentStage, txHash: blockchainResult.txHash });
+    }
 
     res.status(201).json({ success: true, data: report, blockchain: blockchainResult });
   } catch (err) {

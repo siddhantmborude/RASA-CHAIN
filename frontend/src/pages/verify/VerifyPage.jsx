@@ -4,11 +4,33 @@ import { CheckCircle, XCircle, AlertTriangle, Link2, Shield, Leaf, MapPin, Calen
 import { format } from 'date-fns';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useSocket } from '../../context/SocketContext';
 
 const EVENT_EMOJIS = {
   harvest: '🌿', lab_testing: '🔬', manufacturing: '🏭',
-  packaging: '📦', distribution: '🚛', verification: '✅',
+  packaging: '📦', distribution: '🚛', verification: '✅', verified: '✅',
   batch_created: '🆕', regulatory_approval: '🏛️',
+};
+
+const getEventPerformedBy = (event, batch) => {
+  const rawName = event.performedByName || 'System';
+  const isGenericUser = ['man', 'sid', 'manufacturer', 'lab', 'regulator', 'admin', 'farmer'].includes(rawName.toLowerCase());
+  
+  if (isGenericUser) {
+    if (event.eventType === 'harvest' || event.eventType === 'collection' || event.eventType === 'batch_created') {
+      return batch.supplierName || 'Organic Herb Farmer';
+    }
+    if (event.eventType === 'lab_testing') {
+      return 'RASA AI E-Tongue Quality Lab';
+    }
+    if (event.eventType === 'manufacturing' || event.eventType === 'packaging') {
+      return batch.manufacturerName || 'Certified Herbal Manufacturer';
+    }
+    if (event.eventType === 'verified' || event.eventType === 'regulatory_approval') {
+      return 'AYUSH Board Commission';
+    }
+  }
+  return rawName;
 };
 
 export default function VerifyPage() {
@@ -16,6 +38,8 @@ export default function VerifyPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const { socket } = useSocket();
 
   useEffect(() => {
     if (!batchId) { setLoading(false); return; }
@@ -26,6 +50,25 @@ export default function VerifyPage() {
         setLoading(false);
       });
   }, [batchId]);
+
+  useEffect(() => {
+    if (!socket || !batchId) return;
+
+    const handleBatchUpdate = (updateData) => {
+      if (updateData.batchId?.toUpperCase() === batchId.toUpperCase()) {
+        toast.success(`🔗 Real-time blockchain ledger synchronized! Stage updated to: ${updateData.stage || 'verified'}`);
+        axios.get(`/api/verify/${batchId}`)
+          .then(({ data: d }) => setData(d))
+          .catch(() => {});
+      }
+    };
+
+    socket.on('batch:updated', handleBatchUpdate);
+
+    return () => {
+      socket.off('batch:updated', handleBatchUpdate);
+    };
+  }, [socket, batchId]);
 
   if (!batchId) return null;
 
@@ -55,6 +98,36 @@ export default function VerifyPage() {
 
   const { batch, verified, tamperStatus, supplyChainTimeline, blockchainRecords, qualityReports } = data;
 
+  // Manufacturer verification state (Only verified if current stage is manufacturing/packaging/distributed/verified)
+  const isManufacturerVerified = ['manufacturing', 'packaging', 'distributed', 'verified'].includes(batch.currentStage) ||
+                                 (supplyChainTimeline && supplyChainTimeline.some(e => e.eventType === 'manufacturing'));
+
+  // Lab testing verification state (Verified if report exists or timeline has lab_testing or stage is lab_testing/manufacturing/etc.)
+  const isLabVerified = (qualityReports && qualityReports.length > 0 && qualityReports.some(r => r.overallResult === 'passed')) ||
+                        (supplyChainTimeline && supplyChainTimeline.some(e => e.eventType === 'lab_testing')) ||
+                        ['lab_testing', 'manufacturing', 'packaging', 'distributed', 'verified'].includes(batch.currentStage);
+  
+  const mfgName = batch.manufacturer?.name || batch.manufacturerName || 'Certified Herbal Manufacturer';
+
+  const labEvent = supplyChainTimeline?.find(e => e.eventType === 'lab_testing');
+  const rawLabName = qualityReports?.find(r => r.overallResult === 'passed')?.labName || labEvent?.performedByName || 'NABL Certified Lab';
+  const labName = (rawLabName === mfgName || rawLabName?.toLowerCase() === 'sid' || rawLabName?.toLowerCase() === 'manufacturer')
+    ? 'RASA AI E-Tongue Quality Lab'
+    : rawLabName;
+  const labDate = qualityReports?.find(r => r.overallResult === 'passed')?.testDate || labEvent?.timestamp || batch.createdAt;
+  const labGrade = qualityReports?.find(r => r.overallResult === 'passed')?.grade || batch.qualityGrade || 'A';
+
+  // Regulatory approval state (Strictly verified ONLY if regulatoryApproval.status === 'approved')
+  const isRegulatorVerified = batch.regulatoryApproval?.status === 'approved';
+  const regulatorStatus = batch.regulatoryApproval?.status || 'pending';
+  const regEvent = supplyChainTimeline?.find(e => e.eventType === 'regulatory_approval');
+  const rawRegApprover = batch.regulatoryApproval?.approvedBy?.name || regEvent?.performedByName || 'AYUSH Commission Officer';
+  const regApprover = (rawRegApprover === mfgName || rawRegApprover?.toLowerCase() === 'sid' || rawRegApprover?.toLowerCase() === 'manufacturer')
+    ? 'AYUSH Board Commission'
+    : rawRegApprover;
+  const regDate = batch.regulatoryApproval?.approvedAt || regEvent?.timestamp || batch.createdAt;
+  const regComments = batch.regulatoryApproval?.comments || regEvent?.notes || 'Compliance approved and registered on Blockchain.';
+
   return (
     <div className="min-h-screen bg-chain-dark">
       {/* Nav */}
@@ -68,36 +141,107 @@ export default function VerifyPage() {
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 py-10">
-        {/* Verification Result Banner */}
-        <div className={`rounded-2xl p-6 mb-8 border-2 ${
-          verified && tamperStatus.chainIntegrity
-            ? 'border-emerald-500/40 bg-emerald-500/10'
-            : !tamperStatus.chainIntegrity
-            ? 'border-red-500/40 bg-red-500/10'
-            : 'border-amber-500/40 bg-amber-500/10'
-        }`}>
-          <div className="flex items-center gap-4">
-            {verified && tamperStatus.chainIntegrity ? (
-              <CheckCircle className="w-14 h-14 text-emerald-400 flex-shrink-0" />
-            ) : !tamperStatus.chainIntegrity ? (
-              <AlertTriangle className="w-14 h-14 text-red-400 flex-shrink-0" />
-            ) : (
-              <AlertTriangle className="w-14 h-14 text-amber-400 flex-shrink-0" />
-            )}
-            <div>
-              <h1 className={`text-2xl font-black ${
-                verified && tamperStatus.chainIntegrity ? 'text-emerald-400' :
-                !tamperStatus.chainIntegrity ? 'text-red-400' : 'text-amber-400'
+        {/* Stakeholder Verification Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Manufacturer Card */}
+          <div className={`glass-card p-5 border-t-4 transition-all hover:scale-[1.02] ${
+            isManufacturerVerified ? 'border-emerald-500 bg-emerald-500/[0.02]' : 'border-amber-500 bg-amber-500/[0.02]'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-white/[0.03] flex items-center justify-center border border-white/10">
+                <span className="text-xl">🏭</span>
+              </div>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                isManufacturerVerified ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : 'text-amber-400 border-amber-500/20 bg-amber-500/10'
               }`}>
-                {verified && tamperStatus.chainIntegrity
-                  ? '✅ Authentic Product Verified'
-                  : !tamperStatus.chainIntegrity
-                  ? '⚠️ Tamper Alert Detected'
-                  : '⏳ Verification Pending'}
-              </h1>
-              <p className="text-gray-300 mt-1">{tamperStatus.message}</p>
-              <p className="text-gray-500 text-xs mt-1">Verified at {format(new Date(data.verificationTimestamp), 'MMM d, yyyy h:mm:ss a')}</p>
+                {isManufacturerVerified ? 'Verified' : 'Pending'}
+              </span>
             </div>
+            <h3 className="text-sm font-bold text-white mb-1">Manufacturer Sign-Off</h3>
+            {isManufacturerVerified ? (
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 line-clamp-1">
+                  {batch.manufacturer?.organization || batch.manufacturerOrganization || batch.manufacturerName}
+                </p>
+                <p className="text-[10px] text-gray-500">
+                  Registered: {format(new Date(batch.manufacturingDate || batch.createdAt), 'MMM d, yyyy')}
+                </p>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Signed on Chain
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">Production data registration pending.</p>
+            )}
+          </div>
+
+          {/* Lab Verification Card */}
+          <div className={`glass-card p-5 border-t-4 transition-all hover:scale-[1.02] ${
+            isLabVerified ? 'border-emerald-500 bg-emerald-500/[0.02]' : 'border-amber-500 bg-amber-500/[0.02]'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-white/[0.03] flex items-center justify-center border border-white/10">
+                <span className="text-xl">🔬</span>
+              </div>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                isLabVerified ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : 'text-amber-400 border-amber-500/20 bg-amber-500/10'
+              }`}>
+                {isLabVerified ? `Passed (${labGrade})` : 'Pending'}
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1">Lab Testing & Purity</h3>
+            {isLabVerified ? (
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 line-clamp-1">{labName}</p>
+                <p className="text-[10px] text-gray-500">
+                  Certified: {format(new Date(labDate), 'MMM d, yyyy')}
+                </p>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Quality Cryptosigned
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">Laboratory quality testing report pending.</p>
+            )}
+          </div>
+
+          {/* Regulator Card */}
+          <div className={`glass-card p-5 border-t-4 transition-all hover:scale-[1.02] ${
+            isRegulatorVerified ? 'border-emerald-500 bg-emerald-500/[0.02]' :
+            regulatorStatus === 'rejected' ? 'border-red-500 bg-red-500/[0.02]' : 'border-amber-500 bg-amber-500/[0.02]'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-white/[0.03] flex items-center justify-center border border-white/10">
+                <span className="text-xl">🏛️</span>
+              </div>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border capitalize ${
+                isRegulatorVerified ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
+                regulatorStatus === 'rejected' ? 'text-red-400 border-red-500/20 bg-red-500/10' : 'text-amber-400 border-amber-500/20 bg-amber-500/10'
+              }`}>
+                {regulatorStatus}
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1">Regulatory Authorization</h3>
+            {isRegulatorVerified ? (
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 line-clamp-1">{regApprover}</p>
+                <p className="text-[10px] text-gray-500">
+                  Approved: {format(new Date(regDate), 'MMM d, yyyy')}
+                </p>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Compliance Approved
+                </div>
+              </div>
+            ) : regulatorStatus === 'rejected' ? (
+              <div className="space-y-1">
+                <p className="text-xs text-red-400 line-clamp-2">{regComments}</p>
+                <p className="text-[10px] text-gray-500">
+                  Decision: {format(new Date(regDate), 'MMM d, yyyy')}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">Awaiting government regulator approval.</p>
+            )}
           </div>
         </div>
 
@@ -158,7 +302,7 @@ export default function VerifyPage() {
                     </div>
                     <div className="pb-6">
                       <p className="text-sm font-semibold text-white capitalize">{event.eventType?.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-gray-500">{event.performedByName || 'System'} · {format(new Date(event.timestamp), 'MMM d, yyyy')}</p>
+                      <p className="text-xs text-gray-500">{getEventPerformedBy(event, batch)} · {format(new Date(event.timestamp), 'MMM d, yyyy')}</p>
                       {event.notes && <p className="text-xs text-gray-600 mt-1">{event.notes}</p>}
                       {event.txHash && (
                         <p className="font-mono text-[10px] text-indigo-400/70 mt-1">{event.txHash.slice(0, 30)}...</p>

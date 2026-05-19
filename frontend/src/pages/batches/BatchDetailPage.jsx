@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 
 const EVENT_ICONS = {
   harvest: '🌿', lab_testing: '🔬', manufacturing: '🏭',
-  packaging: '📦', distribution: '🚛', verification: '✅', custom: '📋',
+  packaging: '📦', distribution: '🚛', verification: '✅', verified: '✅', custom: '📋',
 };
 
 const EVENT_COLORS = {
@@ -22,6 +22,7 @@ const EVENT_COLORS = {
   packaging: 'bg-amber-500',
   distribution: 'bg-pink-500',
   verification: 'bg-emerald-500',
+  verified: 'bg-emerald-500',
   custom: 'bg-gray-500',
 };
 

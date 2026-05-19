@@ -12,8 +12,6 @@ export function SocketProvider({ children }) {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const newSocket = io('/', {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
@@ -31,6 +29,7 @@ export function SocketProvider({ children }) {
 
     // Listen for real-time batch events
     newSocket.on('batch:created', (data) => {
+      if (!isAuthenticated) return;
       const notif = {
         id: Date.now(),
         type: 'batch_created',
@@ -52,6 +51,7 @@ export function SocketProvider({ children }) {
     });
 
     newSocket.on('batch:updated', (data) => {
+      if (!isAuthenticated) return;
       const notif = {
         id: Date.now(),
         type: 'batch_updated',

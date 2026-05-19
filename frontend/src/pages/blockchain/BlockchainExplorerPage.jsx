@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const EVENT_COLORS = {
   batch_created: 'bg-indigo-500', harvest_entry: 'bg-green-500', lab_testing: 'bg-blue-500',
   manufacturing: 'bg-purple-500', packaging: 'bg-amber-500', distribution: 'bg-pink-500',
-  verification: 'bg-emerald-500', regulatory_approval: 'bg-teal-500',
+  verification: 'bg-emerald-500', verified: 'bg-emerald-500', regulatory_approval: 'bg-teal-500',
   sensor_upload: 'bg-cyan-500', tamper_detected: 'bg-red-500',
 };
 
@@ -72,7 +72,7 @@ export default function BlockchainExplorerPage() {
       <div className="glass-card p-4 mb-6 flex gap-3">
         <select value={filter.eventType} onChange={(e) => setFilter(p => ({ ...p, eventType: e.target.value }))} className="input-field text-sm py-2.5 w-auto">
           <option value="" style={{ background: '#111128' }}>All Events</option>
-          {['batch_created', 'harvest_entry', 'lab_testing', 'manufacturing', 'packaging', 'distribution', 'verification', 'regulatory_approval', 'sensor_upload'].map(e => (
+          {['batch_created', 'harvest_entry', 'lab_testing', 'manufacturing', 'packaging', 'distribution', 'verification', 'verified', 'regulatory_approval', 'sensor_upload'].map(e => (
             <option key={e} value={e} style={{ background: '#111128' }}>{e.replace(/_/g, ' ')}</option>
           ))}
         </select>
