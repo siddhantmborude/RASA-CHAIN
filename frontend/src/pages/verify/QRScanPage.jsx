@@ -14,7 +14,7 @@ export default function QRScanPage() {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const { data } = await axios.post('/api/verify/search', { query: query.trim() });
+      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/verify/search`, { query: query.trim() });
       navigate(`/verify/${data.data.batchId}`);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Batch not found');

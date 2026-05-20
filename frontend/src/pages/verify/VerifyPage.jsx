@@ -43,7 +43,7 @@ export default function VerifyPage() {
 
   useEffect(() => {
     if (!batchId) { setLoading(false); return; }
-    axios.get(`/api/verify/${batchId}`)
+    axios.get(`${import.meta.env.VITE_API_URL || ''}/api/verify/${batchId}`)
       .then(({ data: d }) => { setData(d); setLoading(false); })
       .catch((err) => {
         setError(err.response?.data?.error || 'Batch not found');
@@ -57,7 +57,7 @@ export default function VerifyPage() {
     const handleBatchUpdate = (updateData) => {
       if (updateData.batchId?.toUpperCase() === batchId.toUpperCase()) {
         toast.success(`🔗 Real-time blockchain ledger synchronized! Stage updated to: ${updateData.stage || 'verified'}`);
-        axios.get(`/api/verify/${batchId}`)
+        axios.get(`${import.meta.env.VITE_API_URL || ''}/api/verify/${batchId}`)
           .then(({ data: d }) => setData(d))
           .catch(() => {});
       }

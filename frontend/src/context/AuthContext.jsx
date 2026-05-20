@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
-const api = axios.create({ baseURL: '/api' });
+const api = axios.create({ baseURL: `${import.meta.env.VITE_API_URL || ''}/api` });
 
 // Request interceptor - add JWT token
 api.interceptors.request.use((config) => {

@@ -12,7 +12,7 @@ export function SocketProvider({ children }) {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const newSocket = io('/', {
+    const newSocket = io(import.meta.env.VITE_API_URL || '/', {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
