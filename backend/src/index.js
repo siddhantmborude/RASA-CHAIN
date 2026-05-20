@@ -14,11 +14,21 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
+// CORS allowed origins list
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.SOCKET_CORS_ORIGIN,
+  'https://rasa-chain-frontend.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
+].filter(Boolean);
+
 // Socket.IO Setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:3000',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
@@ -30,7 +40,13 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 // CORS
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

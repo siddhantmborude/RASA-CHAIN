@@ -12,7 +12,8 @@ export function SocketProvider({ children }) {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_API_URL || '/', {
+    const backendUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://rasa-chain-backend.onrender.com' : '/');
+    const newSocket = io(backendUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
