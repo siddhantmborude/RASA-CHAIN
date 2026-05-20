@@ -137,7 +137,7 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rasa-chain')
+  .connect(process.env.MONGODB_URI || 'mongodb+srv://siddhantmborude_db_user:<db_password>@rasa-chain.0zcglik.mongodb.net/?appName=rasa-chain')
   .then(() => {
     console.log('✅ MongoDB Connected');
     server.listen(PORT, () => {
