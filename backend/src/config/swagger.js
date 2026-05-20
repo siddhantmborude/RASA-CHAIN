@@ -17,6 +17,10 @@ const options = {
     },
     servers: [
       {
+        url: 'https://rasa-chain-backend.onrender.com',
+        description: 'Production Server',
+      },
+      {
         url: 'http://localhost:5000',
         description: 'Development Server',
       },
