@@ -203,7 +203,11 @@ batchSchema.index({ createdAt: -1 });
 
 // Virtual for verification URL
 batchSchema.virtual('verificationUrl').get(function () {
-  return `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify/${this.batchId}`;
+  const clientUrl = process.env.CLIENT_URL || 
+    (process.env.NODE_ENV === 'production' 
+      ? 'https://rasa-chain-frontend.vercel.app' 
+      : 'http://localhost:3000');
+  return `${clientUrl}/verify/${this.batchId}`;
 });
 
 module.exports = mongoose.model('Batch', batchSchema);

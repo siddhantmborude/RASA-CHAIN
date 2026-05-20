@@ -38,7 +38,11 @@ class QRService {
    * QR encodes the public verification URL
    */
   async generateBatchQR(batchId) {
-    const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify/${batchId}`;
+    const clientUrl = process.env.CLIENT_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://rasa-chain-frontend.vercel.app' 
+        : 'http://localhost:3000');
+    const verificationUrl = `${clientUrl}/verify/${batchId}`;
     const qrData = JSON.stringify({
       batchId,
       url: verificationUrl,
@@ -54,7 +58,11 @@ class QRService {
    * Save QR code to disk
    */
   async saveQRToFile(batchId) {
-    const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify/${batchId}`;
+    const clientUrl = process.env.CLIENT_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://rasa-chain-frontend.vercel.app' 
+        : 'http://localhost:3000');
+    const verificationUrl = `${clientUrl}/verify/${batchId}`;
     const filePath = path.join(this.uploadDir, `${batchId}.png`);
 
     await QRCode.toFile(filePath, verificationUrl, {

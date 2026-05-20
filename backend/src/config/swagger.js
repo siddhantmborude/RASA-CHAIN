@@ -1,5 +1,10 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
+const swaggerServerUrl = process.env.API_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://rasa-chain-backend.onrender.com' 
+    : 'http://localhost:5000');
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -17,12 +22,8 @@ const options = {
     },
     servers: [
       {
-        url: 'https://rasa-chain-backend.onrender.com',
-        description: 'Production Server',
-      },
-      {
-        url: 'http://localhost:5000',
-        description: 'Development Server',
+        url: swaggerServerUrl,
+        description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server',
       },
     ],
     components: {
